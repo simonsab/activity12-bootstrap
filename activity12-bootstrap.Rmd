@@ -136,9 +136,10 @@ The last thing you want is those samples to change every time you knit your docu
 
 
 ```{r}
-set.seed(1234)
-edu <- replicate(1000, sample(gss_educ$educ, size=nrow(gss_educ), replace=TRUE), simplify=FALSE)
+set.seed(111092)
+edu <- replicate(1000, sample(gss_educ$educ,replace=TRUE))
 meanedu <- map_dbl(edu, mean)
+
 ```
 
 
@@ -179,7 +180,7 @@ Then, restructure this dataframe to create a faceted plot that displays histogra
 You should assign this restructured dataframe to an R object to help you with the next task.
 
 ```{r}
-set.seed(1234)
+set.seed(111092)
 funct <- function(){
   df2 <- replicate(1000, sample(gss_educ$educ, size=nrow(gss_educ), replace=TRUE), simplify=FALSE)
   df3 <- tibble(
