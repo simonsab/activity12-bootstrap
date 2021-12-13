@@ -1,6 +1,6 @@
 ---
 title: "Activity 12"
-author: "Name"
+author: Abby
 output: github_document
 ---
 
@@ -13,6 +13,10 @@ knitr::opts_chunk$set(error = TRUE)
 
 In this activity you will be bootstrapping - a form of statistical inference that uses resampling methods.
 First, you will need `{tidyverse}` and `{infer}`.
+```{r}
+library(tidyverse)
+library(infer)
+```
 
 
 ### Data
@@ -59,33 +63,40 @@ Plot a histogram of `educ` with an overlaying density.
 Comment on the center, spread, and shape.
 
 
+```{r}
+gss %>% 
+  ggplot(mapping=aes(educ))+
+  geom_histogram(aes(y=..density..), bins=10)+
+  geom_density()
+```
 
-
-**Response**:
+**Response**: Skewed to the right
 
 
 Suppose we're interested in making inference about the typical number of years of education that a person has completed and this is our representative sample.
 Is the mean a good statistic to use here to describe the typical value of salary?
 Why or why not?
 
-**Response**:
+**Response**: No, because there are outliers in the data set and it has a skewed distribution
 
 
 Recall from your introductory statistics course that a one-sample *t*-test requires that the sample mean is Normally distributed.
 Does this assumption seem reasonable for the mean number of years of education?
 Why or why not?
 
-***Response**:
+***Response**: No because the data is not normally distributed
 
 
 Since our sample size is so large, the distribution of the *sample mean* is approximately Normal (the CLT!).
 The `t.test` function can be used to do a one-sample *t*-test and to find a 90% confidence interval for the mean number of years of education that US adults complete.
 Use this function to construct a 90% confidence interval for the mean number of years of education that US adults complete.
 
+```{r}
+t.test(gss$educ, conf.level=0.9)
+```
 
 
-
-**Response**:
+**Response**: 90% confident that mean number of years of education is between 13.65 and 13.83
 
 
 ### Bootstrapping
@@ -124,19 +135,25 @@ Then, use the appropriate `purrr::map` function to calculate the mean for each o
 The last thing you want is those samples to change every time you knit your document because your interpretations might be slightly different so you will need to set a seed that is your birthday in `yymmdd` format (your instructor's seed would be set to the number `851217`).
 
 
-
+```{r}
+set.seed(01116)
+edu <- replicate(1000, sample(gss_educ$educ, size=nrow(gss_educ), replace=TRUE), simplify=FALSE)
+meanedu <- map_dbl(edu, mean)
+```
 
 
 Now, use the `quantile` function with appropriate `probs` to get construct a 90% bootstrap confidence interval for the mean number of years of education that US adults complete.
 You will need to give some thought about what the lower and upper quantiles would be to identify the middle 90%.
 
 
-
+```{r}
+quantile(meanedu, probs=c(0.10, 0.90))
+```
 
 
 Compare this bootstrap interval to your `t.test` confidence interval from above.
 
-
+The t.test and the bootstrap interval are both very close in value. They do not differ much. 
 
 ## Challenge: Other statistics
 
@@ -161,14 +178,27 @@ That is, your final dataframe would look like:
 Then, restructure this dataframe to create a faceted plot that displays histograms for each measure on center.
 You should assign this restructured dataframe to an R object to help you with the next task.
 
-
-
+```{r}
+set.seed(01116)
+funct <- function(){
+  df2 <- replicate(1000, sample(gss_educ$educ, size=nrow(gss_educ), replace=TRUE), simplify=FALSE)
+  df3 <- tibble(
+  mean = map_dbl(df2, mean),
+  median = map_dbl(df2, median),
+  midhinge = map_dbl(df2, statip::midhinge)
+  )
+}
+df3 <- funct()
+```
 
 Using this restructured dataframe, compute 90% bootstrap confidence intervals *for each* statistics.
 For each, compare to your interval to the bootstrap interval for the *mean* that you computed first. 
 
-
-
+```{r}
+quantile(df3$mean, probs=c(0.10, 0.90))
+quantile(df3$median, probs=c(0.10, 0.90))
+quantile(df3$midhinge, probs=c(0.10, 0.90))
+```
 
 Which of these statistics do you think is the best statistic to describe the number of years of education?
 Why?
